@@ -103,4 +103,4 @@ export const jsx = (type: ElementType, config: any, maybeKey: any) => {
 	return ReactElement(type, key, ref, props);
 };
 
-export const jsxDev = jsx;
+export const jsxDEV = jsx;
