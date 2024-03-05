@@ -10,6 +10,7 @@ import {
 	HostText
 } from './workTags';
 import { mountChildFibers, reconcilerChildFibers } from './childFibers';
+import { renderWithHooks } from './fiberHooks';
 
 // beginWork 就是递归的递阶段
 export const beginWork = (wip: FiberNode): FiberNode | null => {
@@ -52,8 +53,7 @@ function updateHostComponent(wip: FiberNode) {
 }
 
 function updateFunctionComponent(wip: FiberNode) {
-	const nextProps = wip.pendingProps;
-	const nextChildren = nextProps.children;
+	const nextChildren = renderWithHooks(wip);
 	reconcilerChildren(wip, nextChildren);
 	return wip.child;
 }
