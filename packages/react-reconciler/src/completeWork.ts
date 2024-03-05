@@ -1,6 +1,7 @@
 // JSX消费的顺序 是以DFS（深度优先遍历）的顺序遍历ReactElement
 
 import {
+	Container,
 	appendInitialChild,
 	createInstance,
 	createTextInstance
@@ -48,7 +49,7 @@ export const completeWork = (wip: FiberNode) => {
 	}
 };
 
-function appendAllChildren(parent: FiberNode, wip: FiberNode) {
+function appendAllChildren(parent: Container, wip: FiberNode) {
 	let node = wip.child;
 
 	while (node !== null) {
