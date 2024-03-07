@@ -70,7 +70,7 @@ function mountState<State>(
 	const dispatch = (queue.dispatch = dispatchSetState.bind(
 		null,
 		currentlyRenderingFiber as FiberNode,
-		queue
+		queue as any
 	));
 	return [memorizedState, dispatch];
 }
