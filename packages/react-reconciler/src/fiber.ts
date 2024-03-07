@@ -16,6 +16,8 @@ export class FiberNode {
 	sibling: FiberNode | null;
 	// 子节点
 	child: FiberNode | null;
+	index: number;
+
 	// 缓存的props
 	memoizedProps: Props | null;
 	memorizedState: any;
@@ -23,6 +25,7 @@ export class FiberNode {
 	alternate: FiberNode | null;
 	flags: Flags; // 标记 是新增还是删除还是更新还是不变
 	subTreeFlags: Flags; // 标记子树是否需要更新
+	deletions: FiberNode[] | null; // 标记删除的节点
 	updateQueue: unknown;
 
 	constructor(tag: WorkTag, pendingProps: Props, key: Key) {
@@ -38,6 +41,7 @@ export class FiberNode {
 		this.return = null;
 		this.sibling = null;
 		this.child = null;
+		this.index = 0;
 
 		this.ref = null;
 
@@ -51,6 +55,7 @@ export class FiberNode {
 		// 副作用
 		this.flags = NoFlags;
 		this.subTreeFlags = NoFlags;
+		this.deletions = null;
 	}
 }
 
@@ -87,6 +92,7 @@ export const createWorkInProgress = (
 		// 副作用
 		wip.flags = NoFlags;
 		wip.subTreeFlags = NoFlags;
+		wip.deletions = null;
 	}
 
 	wip.type = current.type;
