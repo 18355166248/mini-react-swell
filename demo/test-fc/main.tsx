@@ -3,13 +3,8 @@ import ReactDOM from 'react-dom/client';
 
 function App() {
 	const [num, updateNum] = useState(0);
-	window.updateNum = updateNum; 
-	return (
-		<div>
-			{/* <Child /> */}
-			<div>{num}</div>
-		</div>
-	);
+	window.updateNum = updateNum;
+	return num === 3 ? <Child /> : <div>{num}</div>;
 }
 
 function Child() {

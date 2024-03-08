@@ -70,7 +70,7 @@ function ChildrenReconciler(shouldTrackEffects: boolean) {
 			// update
 			if (currentFiber.tag === HostText) {
 				// 类型没变 可以复用
-				const existing = useFiber(currentFiber, content);
+				const existing = useFiber(currentFiber, { content });
 				existing.return = returnFiber;
 				return existing;
 			}
