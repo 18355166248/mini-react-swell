@@ -1,14 +1,16 @@
 import { FiberNode } from 'react-reconciler/src/fiber';
 import { HostText } from 'react-reconciler/src/workTags';
+import { DOMElement, updateFiberProps } from './SynthesisEvent';
+import { Props } from 'shared/ReactTypes';
 
 export type Container = Element;
 export type Instance = Element;
 export type TextInstance = Text;
 
-export const createInstance = (type: string, props: any) => {
-	// TODO: 处理 props
-	const element = document.createElement(type);
-	return element;
+export const createInstance = (type: string, props: Props) => {
+	const element = document.createElement(type) as unknown;
+	updateFiberProps(element as DOMElement, props);
+	return element as DOMElement;
 };
 
 export const createTextInstance = (content: string) => {
