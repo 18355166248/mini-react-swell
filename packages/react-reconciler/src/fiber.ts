@@ -31,7 +31,7 @@ export class FiberNode {
 	constructor(tag: WorkTag, pendingProps: Props, key: Key) {
 		this.tag = tag;
 		this.pendingProps = pendingProps;
-		this.key = key;
+		this.key = key || null;
 		// HostComponent <div></div> Dom
 		this.stateNode = null;
 		// FuncComponent function () {}

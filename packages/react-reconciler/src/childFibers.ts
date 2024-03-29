@@ -4,7 +4,7 @@ import {
 	createFiberFromElement,
 	createWorkInProgress
 } from './fiber';
-import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
+import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from 'shared/ReactSymbols';
 import { HostText } from './workTags';
 import { ChildDeletion, Placement } from './fiberFlags';
 
@@ -231,8 +231,19 @@ function ChildrenReconciler(shouldTrackEffects: boolean) {
 	return function reconcilerChildrenFibers(
 		returnFiber: FiberNode,
 		currentFiber: FiberNode | null,
-		newChild?: ReactElementType
+		newChild?: any
 	) {
+		// 判断 Fragment
+		const isUnKeyedTopLevelFragment =
+			typeof newChild === 'object' &&
+			newChild !== null &&
+			newChild.type === REACT_FRAGMENT_TYPE &&
+			newChild.key === null;
+
+		if (isUnKeyedTopLevelFragment) {
+			newChild = newChild.props.children;
+		}
+
 		// 判断当前Fiber的类型
 		if (typeof newChild === 'object' && newChild !== null) {
 			switch (newChild.$$typeof) {
@@ -262,7 +273,7 @@ function ChildrenReconciler(shouldTrackEffects: boolean) {
 
 		// 删除旧的
 		if (currentFiber !== null) {
-			deleteChild(returnFiber, currentFiber);
+			deleteRemainingChildren(returnFiber, currentFiber);
 		}
 
 		if (__DEV__) {
