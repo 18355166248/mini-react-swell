@@ -94,6 +94,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 	const queue = hook.updateQueue as UpdateQueue<State>;
 	const pending = queue.shared.pending;
 
+	// 消费updateQueue
 	if (pending !== null) {
 		const { memorizedState } = processUpdateQueue(hook.memorizedState, pending);
 		hook.memorizedState = memorizedState;
