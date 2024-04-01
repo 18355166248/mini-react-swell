@@ -3,6 +3,13 @@ import { commitMutationEffects } from './comitWork';
 import { completeWork } from './completeWork';
 import { FiberNode, FiberRootNode, createWorkInProgress } from './fiber';
 import { MutationMask, NoFlags } from './fiberFlags';
+import {
+	Lane,
+	NoLane,
+	SyncLine,
+	getHighestPriority,
+	mergeLanes
+} from './fiberLane';
 import { HostRoot } from './workTags';
 
 let workingProgress: FiberNode | null = null;
@@ -12,10 +19,29 @@ function prepareFreshStake(root: FiberRootNode) {
 	workingProgress = createWorkInProgress(root.current, {});
 }
 
-export function scheduleUpdateFiber(fiber: FiberNode) {
+export function scheduleUpdateFiber(fiber: FiberNode, lane: Lane) {
 	// 调度功能
 	const root = markUpdateFromFiberToRoot(fiber);
-	renderRoot(root);
+	markRootUpdate(root, lane);
+	ensureRootScheduled(root);
+}
+
+// 保持我们的任务被调度
+function ensureRootScheduled(root: FiberRootNode) {
+	const updateLane = getHighestPriority(root.pendingLanes);
+	if (updateLane === NoLane) {
+		return;
+	}
+	if (updateLane === SyncLine) {
+		// 同步优先级 用微任务调度
+		
+	} else {
+		// 其他优先级 用宏任务调度
+	}
+}
+
+function markRootUpdate(root: FiberRootNode, lane: Lane) {
+	root.pendingLanes = mergeLanes(root.pendingLanes, lane);
 }
 
 function markUpdateFromFiberToRoot(fiber: FiberNode) {

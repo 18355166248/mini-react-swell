@@ -1,8 +1,11 @@
 import { Dispatch } from 'react/src/currentDispatcher';
 import { Action } from 'shared/ReactTypes';
+import { Lane } from './fiberLane';
 
 export interface Update<State> {
 	action: Action<State>;
+	next: Update<any> | null;
+	lane: Lane;
 }
 
 export interface UpdateQueue<State> {
@@ -12,9 +15,14 @@ export interface UpdateQueue<State> {
 	dispatch: Dispatch<State> | null;
 }
 
-export const createUpdate = <State>(action: Action<State>): Update<State> => {
+export const createUpdate = <State>(
+	action: Action<State>,
+	lane: Lane
+): Update<State> => {
 	return {
-		action
+		action,
+		next: null,
+		lane
 	};
 };
 
@@ -31,6 +39,20 @@ export const enqueueUpdate = <State>(
 	updateQueue: UpdateQueue<State>,
 	update: Update<State>
 ) => {
+	// 生成一个链表
+	// pending指向的一直是最后一个update
+	const pending = updateQueue.shared.pending;
+	if (pending === null) {
+		// a -> a
+		update.next = update;
+	} else {
+		// b -> a -> b
+		// b.next = a.next
+		update.next = pending;
+		// a.next = b
+		pending.next = update;
+	}
+	// pending = b
 	updateQueue.shared.pending = update;
 };
 
