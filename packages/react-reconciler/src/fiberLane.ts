@@ -1,3 +1,5 @@
+import { FiberRootNode } from './fiber';
+
 export type Lane = number;
 export type Lanes = number;
 
@@ -15,4 +17,9 @@ export function requestUpdateLanes() {
 
 export function getHighestPriority(lanes: Lanes) {
 	return lanes & -lanes;
+}
+
+// 移除lane
+export function markRootFinished(root: FiberRootNode, lane: Lane) {
+	root.pendingLanes &= ~lane;
 }

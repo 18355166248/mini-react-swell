@@ -12,7 +12,6 @@ export function scheduleSyncCallback(callback: (...args: any) => void) {
 export function flushSyncCallback() {
 	if (!isFlushingSyncQueue && syncQueue) {
 		isFlushingSyncQueue = true;
-
 		try {
 			syncQueue.forEach((callback) => callback());
 		} catch (e) {
@@ -21,6 +20,7 @@ export function flushSyncCallback() {
 			}
 		} finally {
 			isFlushingSyncQueue = false;
+			syncQueue = null;
 		}
 	}
 }

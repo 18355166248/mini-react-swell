@@ -48,7 +48,7 @@ export const enqueueUpdate = <State>(
 	} else {
 		// b -> a -> b
 		// b.next = a.next
-		update.next = pending;
+		update.next = pending.next;
 		// a.next = b
 		pending.next = update;
 	}
@@ -58,20 +58,38 @@ export const enqueueUpdate = <State>(
 
 export const processUpdateQueue = <State>(
 	baseState: State,
-	pendingUpdate: Update<State> | null
+	pendingUpdate: Update<State> | null,
+	renderLane: Lane
 ): { memorizedState: State } => {
 	const result: ReturnType<typeof processUpdateQueue<State>> = {
 		memorizedState: baseState
 	};
 	if (pendingUpdate !== null) {
-		const action = pendingUpdate.action;
-		if (action instanceof Function) {
-			// baseState 1 update 2 memorizedState 2
-			result.memorizedState = action(baseState);
-		} else {
-			// baseState 1 update (x) => 4x -> memorizedState 4
-			result.memorizedState = action;
-		}
+		// 第一个update
+		const first = pendingUpdate.next;
+		let pending = pendingUpdate.next as Update<any>;
+
+		do {
+			const updateLane = pending.lane;
+			if (updateLane === renderLane) {
+				const action = pendingUpdate.action;
+				if (action instanceof Function) {
+					// baseState 1 update 2 memorizedState 2
+					baseState = action(baseState);
+				} else {
+					// baseState 1 update (x) => 4x -> memorizedState 4
+					baseState = action;
+				}
+			} else {
+				if (__DEV__) {
+					console.warn('不应该进入updateLane !== renderLane');
+				}
+			}
+
+			pending = pending.next as Update<any>;
+		} while (pending !== first);
+
+		result.memorizedState = baseState;
 	}
 
 	return result;
