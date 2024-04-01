@@ -34,7 +34,7 @@ function ensureRootScheduled(root: FiberRootNode) {
 	}
 	if (updateLane === SyncLine) {
 		// 同步优先级 用微任务调度
-		
+
 	} else {
 		// 其他优先级 用宏任务调度
 	}
