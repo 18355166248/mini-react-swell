@@ -11,6 +11,8 @@ import {
 import { Action } from 'shared/ReactTypes';
 import { scheduleUpdateFiber } from './workLoop';
 import { Lane, NoLanes, requestUpdateLanes } from './fiberLane';
+import { Flags, PassiveEffect } from './fiberFlags';
+import { HookHasEffect, Passive } from './hookEffectTags';
 
 let currentlyRenderingFiber: FiberNode | null = null;
 let workInProgressHook: Hook | null = null;
@@ -18,6 +20,21 @@ let currentHook: Hook | null = null;
 let renderLane: Lane = NoLanes;
 
 const { currentDispatcher } = internals;
+
+export interface FCUpdateQueue<State> extends UpdateQueue<State> {
+	lastEffect: Effect | null;
+}
+
+export interface Effect {
+	tags: Flags;
+	create: EffectCallback | void;
+	destroy: EffectCallback | void;
+	deps: EffectDeps | null;
+	next: Effect | null;
+}
+
+export type EffectCallback = () => void;
+export type EffectDeps = any[] | null;
 
 interface Hook {
 	memorizedState: any;
@@ -30,6 +47,8 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 	currentlyRenderingFiber = wip;
 	// 重置
 	wip.memorizedState = null;
+	// 重置 effect 链表
+	wip.updateQueue = null;
 	renderLane = lane;
 
 	const current = wip.alternate;
@@ -57,11 +76,13 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 
 // 初始化时dispatch
 const HooksDispatcherOnMount: Dispatcher = {
-	useState: mountState
+	useState: mountState,
+	useEffect: mountEffect
 };
 // 更新时dispatch
 const HooksDispatcherOnUpdate: Dispatcher = {
-	useState: updateState
+	useState: updateState,
+	useEffect: updateEffect
 };
 
 function mountState<State>(
@@ -110,6 +131,100 @@ function updateState<State>(): [State, Dispatch<State>] {
 	}
 
 	return [hook.memorizedState, queue.dispatch as Dispatch<State>];
+}
+
+function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+	const hook = mountWorkInProgressHook();
+	const nextDeps = deps === undefined ? null : deps;
+	// 表示当前effect是否需要处理副作用
+	(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
+	hook.memorizedState = pushEffect(
+		Passive | HookHasEffect,
+		create,
+		undefined,
+		nextDeps
+	);
+}
+
+function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+	const hook = updateWorkInProgressHook();
+	const nextDeps = deps === undefined ? null : deps;
+	let destroy: EffectCallback | void;
+
+	if (currentHook !== null) {
+		const prevEffect = currentHook.memorizedState as Effect;
+		destroy = prevEffect.destroy;
+
+		if (nextDeps !== null) {
+			// 浅比较 相等
+			const prevDeps = prevEffect.deps;
+			if (areHookInputEqual(nextDeps, prevDeps)) {
+				hook.memorizedState = pushEffect(Passive, create, destroy, nextDeps);
+				return;
+			}
+		}
+		// 浅比较 不相等
+		(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
+		hook.memorizedState = pushEffect(
+			Passive | HookHasEffect,
+			create,
+			destroy,
+			nextDeps
+		);
+	}
+
+	// 表示当前effect是否需要处理副作用
+	(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
+	hook.memorizedState = pushEffect(
+		Passive | HookHasEffect,
+		create,
+		undefined,
+		nextDeps
+	);
+}
+
+function pushEffect(
+	hookFlags: Flags,
+	create: EffectCallback | void,
+	destroy: EffectCallback | void,
+	deps: EffectDeps | null
+): Effect {
+	const effect: Effect = {
+		tags: hookFlags,
+		create,
+		destroy,
+		deps,
+		next: null
+	};
+
+	const fiber = currentlyRenderingFiber as FiberNode;
+	let updateQueue = fiber.updateQueue as FCUpdateQueue<any>;
+	if (updateEffect === null) {
+		updateQueue = createFCUpdateQueue();
+		fiber.updateQueue = updateQueue;
+		effect.next = effect;
+		updateQueue.lastEffect = effect;
+	} else {
+		// 插入Effect
+		const laseEffect = updateQueue.lastEffect;
+		if (laseEffect === null) {
+			effect.next = effect;
+			updateQueue.lastEffect = effect;
+		} else {
+			const firstEffect = laseEffect.next;
+			laseEffect.next = effect;
+			effect.next = firstEffect;
+			updateQueue.lastEffect = effect;
+		}
+	}
+
+	return effect;
+}
+
+function createFCUpdateQueue<State>() {
+	const updateQueue = createUpdateQueue<State>() as FCUpdateQueue<State>;
+	updateQueue.lastEffect = null;
+	return updateQueue;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -193,4 +308,17 @@ function dispatchSetState<State>(
 	const update = createUpdate(action, lane);
 	enqueueUpdate(updateQueue, update);
 	scheduleUpdateFiber(fiber, lane);
+}
+
+function areHookInputEqual(nextDeps: EffectDeps, prevDeps: EffectDeps) {
+	if (prevDeps === null || nextDeps === null) {
+		return false;
+	}
+	for (let i = 0; i < nextDeps.length && i < prevDeps.length; i++) {
+		if (Object.is(nextDeps[i], prevDeps[i])) {
+			continue;
+		}
+		return false;
+	}
+	return true;
 }

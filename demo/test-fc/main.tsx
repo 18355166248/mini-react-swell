@@ -1,31 +1,44 @@
-import React, { useState } from 'react';
-import ReactDOM from 'react-dom/client';
+import { useState, useEffect } from 'react';
+import ReactDom from 'react-dom/client';
 
 function App() {
-	const [num, setNum] = useState(100);
-	// window.setNum = setNum;
+	const [num, updateNum] = useState(0);
 
-	const arr =
-		num % 2 === 0
-			? [<li key="1">1</li>, <li key="2">2</li>, <li key="3">3</li>]
-			: [<li key="3">3</li>, <li key="2">2</li>, <li key="1">1</li>];
+	useEffect(() => {
+		console.log('App mount');
+	}, []);
+
+	useEffect(() => {
+		console.warn('num change create', num);
+
+		return () => {
+			console.warn('num change destroy', num);
+		};
+	}, [num]);
 
 	return (
-		<ul
-			onClickCapture={() => {
-				setNum((num1) => num1 + 1);
-				setNum((num2) => num2 + 1);
-				setNum((num3) => num3 + 1);
+		<div
+			onClick={(e) => {
+				updateNum((num: number) => num + 1);
 			}}
 		>
-			{num}
-		</ul>
+			你好
+			{num === 0 ? <Child /> : 'noop'}
+		</div>
 	);
-	return <ul onClickCapture={() => setNum(num + 1)}>{arr}</ul>;
 }
 
 function Child() {
-	return <div>mini-react-swell</div>;
+	useEffect(() => {
+		console.warn('child mount');
+		return () => {
+			console.warn('child unmount');
+		};
+	});
+
+	return <p>i am child.</p>;
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
+ReactDom.createRoot(document.getElementById('root') as HTMLElement).render(
+	<App />
+);
