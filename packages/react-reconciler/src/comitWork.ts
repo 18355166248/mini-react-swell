@@ -13,6 +13,7 @@ import {
 	MutationMask,
 	NoFlags,
 	PassiveEffect,
+	PassiveMask,
 	Placement,
 	Update
 } from './fiberFlags';
@@ -37,7 +38,7 @@ export const commitMutationEffects = (
 		const child: FiberNode | null = nextEffect.child;
 		// 向下遍历
 		if (
-			(nextEffect.subTreeFlags & MutationMask) !== NoFlags &&
+			(nextEffect.subTreeFlags & (MutationMask | PassiveMask)) !== NoFlags &&
 			child !== null
 		) {
 			nextEffect = child;

@@ -9,10 +9,10 @@ function App() {
 	}, []);
 
 	useEffect(() => {
-		console.warn('num change create', num);
+		console.log('num change create', num);
 
 		return () => {
-			console.warn('num change destroy', num);
+			console.log('num change destroy', num);
 		};
 	}, [num]);
 
@@ -30,9 +30,9 @@ function App() {
 
 function Child() {
 	useEffect(() => {
-		console.warn('child mount');
+		console.log('child mount');
 		return () => {
-			console.warn('child unmount');
+			console.log('child unmount');
 		};
 	});
 

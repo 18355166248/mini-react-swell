@@ -172,15 +172,6 @@ function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
 			nextDeps
 		);
 	}
-
-	// 表示当前effect是否需要处理副作用
-	(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
-	hook.memorizedState = pushEffect(
-		Passive | HookHasEffect,
-		create,
-		undefined,
-		nextDeps
-	);
 }
 
 function pushEffect(
@@ -199,7 +190,7 @@ function pushEffect(
 
 	const fiber = currentlyRenderingFiber as FiberNode;
 	let updateQueue = fiber.updateQueue as FCUpdateQueue<any>;
-	if (updateEffect === null) {
+	if (updateQueue === null) {
 		updateQueue = createFCUpdateQueue();
 		fiber.updateQueue = updateQueue;
 		effect.next = effect;
