@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import ReactDom from 'react-dom/client';
 
@@ -18,7 +19,7 @@ function App() {
 
 	return (
 		<div
-			onClick={(e) => {
+			onClick={() => {
 				updateNum((num: number) => num + 1);
 			}}
 		>
