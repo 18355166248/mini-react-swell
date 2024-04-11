@@ -1,3 +1,16 @@
 #root {
  word-break: break-all;
 }
+
+.pri-1 {
+  color: red;
+}
+.pri-2 {
+  color: orange;
+}
+.pri-3 {
+  color: green;
+}
+.pri-4 {
+  color: blue;
+}
