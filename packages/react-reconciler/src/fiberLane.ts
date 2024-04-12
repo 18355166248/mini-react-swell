@@ -10,7 +10,7 @@ import { FiberRootNode } from './fiber';
 export type Lane = number;
 export type Lanes = number;
 
-export const SyncLine = 0b0001;
+export const SyncLane = 0b0001;
 export const NoLane = 0b0000;
 export const NoLanes = 0b0000;
 export const InputContinuesLane = 0b0010;
@@ -40,7 +40,7 @@ export function markRootFinished(root: FiberRootNode, lane: Lane) {
 
 export function lanesToSchedulePriority(lanes: Lanes) {
 	const lane = getHighestPriority(lanes);
-	if (lane === SyncLine) {
+	if (lane === SyncLane) {
 		return unstable_ImmediatePriority;
 	}
 	if (lane === InputContinuesLane) {
@@ -54,7 +54,7 @@ export function lanesToSchedulePriority(lanes: Lanes) {
 
 export function schedulePriorityToLane(schedulerPriority: number): Lane {
 	if (schedulerPriority === unstable_ImmediatePriority) {
-		return SyncLine;
+		return SyncLane;
 	}
 	if (schedulerPriority === unstable_UserBlockingPriority) {
 		return InputContinuesLane;
