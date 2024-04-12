@@ -36,7 +36,7 @@ interface Work {
 			'LowPriority'
 		][priority];
 		btn.onclick = () => {
-			workList.push({ count: 1000, priority: priority as Priority });
+			workList.push({ count: 500, priority: priority as Priority });
 			scheduler();
 		};
 		root.appendChild(btn);
@@ -105,7 +105,7 @@ function insertSpan(content) {
 	const span = document.createElement('span');
 	span.textContent = content;
 	span.className = `pri-${content}`;
-	domSomeBussWork(1000000);
+	domSomeBussWork(500000);
 	root && root.appendChild(span);
 }
 
