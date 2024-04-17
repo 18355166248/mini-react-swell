@@ -145,17 +145,17 @@ function updateState<State>(): [State, Dispatch<State>] {
 		// 保存在current中
 		current.baseQueue = pending;
 		queue.shared.pending = null;
+	}
 
-		if (baseQueue !== null) {
-			const {
-				memorizedState,
-				baseQueue: newBaseQueue,
-				baseState: newBaseState
-			} = processUpdateQueue(baseState, pending, renderLane);
-			hook.memorizedState = memorizedState;
-			hook.baseState = newBaseState;
-			hook.baseQueue = newBaseQueue;
-		}
+	if (baseQueue !== null) {
+		const {
+			memorizedState,
+			baseQueue: newBaseQueue,
+			baseState: newBaseState
+		} = processUpdateQueue(baseState, pending, renderLane);
+		hook.memorizedState = memorizedState;
+		hook.baseState = newBaseState;
+		hook.baseQueue = newBaseQueue;
 	}
 
 	return [hook.memorizedState, queue.dispatch as Dispatch<State>];
