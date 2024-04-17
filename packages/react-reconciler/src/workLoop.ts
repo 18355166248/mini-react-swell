@@ -167,7 +167,7 @@ function performConcurrentOnRoot(
 	const lane = getHighestPriority(root.pendingLanes);
 	const curCallbackNode = root.callbackNode;
 	if (lane === NoLane) {
-		return;
+		return null;
 	}
 	const needSync = lane === SyncLane || didTimeout;
 	// render 阶段
@@ -179,7 +179,7 @@ function performConcurrentOnRoot(
 		// 中断
 		if (root.callbackNode !== curCallbackNode) {
 			// 表示有更高优先级的任务插入 停止继续调度
-			return;
+			return null;
 		}
 		return performConcurrentOnRoot.bind(null, root);
 	}
@@ -327,7 +327,7 @@ function workLoopSync() {
 }
 function workLoopConcurrent() {
 	// shouldYield 应该被中断, !shouldYield 应该继续
-	while (workingProgress !== null && !shouldYield) {
+	while (workingProgress !== null && !shouldYield()) {
 		performUnitWork(workingProgress);
 	}
 }

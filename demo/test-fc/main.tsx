@@ -3,41 +3,46 @@ import { useState, useEffect } from 'react';
 import ReactDom from 'react-dom/client';
 
 function App() {
-	const [num, updateNum] = useState(0);
+	const [num, updateNum] = useState(100);
 
-	useEffect(() => {
-		console.log('App mount');
-	}, []);
+	// useEffect(() => {
+	// 	console.log('App mount');
+	// }, []);
 
-	useEffect(() => {
-		console.log('num change create', num);
+	// useEffect(() => {
+	// 	console.log('num change create', num);
 
-		return () => {
-			console.log('num change destroy', num);
-		};
-	}, [num]);
+	// 	return () => {
+	// 		console.log('num change destroy', num);
+	// 	};
+	// }, [num]);
 
 	return (
 		<div
 			onClick={() => {
-				updateNum((num: number) => num + 1);
+				updateNum(50);
 			}}
 		>
-			你好
-			{num === 0 ? <Child /> : 'noop'}
+			<ul>
+				{new Array(num).fill(0).map((_, i) => (
+					<Child key={i}>{i}</Child>
+				))}
+			</ul>
 		</div>
 	);
 }
 
-function Child() {
-	useEffect(() => {
-		console.log('child mount');
-		return () => {
-			console.log('child unmount');
-		};
-	});
+function Child({ children }) {
+	// useEffect(() => {
+	// 	console.log('child mount');
+	// 	return () => {
+	// 		console.log('child unmount');
+	// 	};
+	// });
+	const now = performance.now();
+	while (performance.now() - now < 4) {}
 
-	return <p>i am child.</p>;
+	return <li>{children}</li>;
 }
 
 ReactDom.createRoot(document.getElementById('root') as HTMLElement).render(
