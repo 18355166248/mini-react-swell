@@ -1,4 +1,5 @@
 import { Dispatcher, Dispatch } from 'react/src/currentDispatcher';
+import currentBatchConfig from 'react/src/currentBatchConfig';
 import { FiberNode } from './fiber';
 import internals from 'shared/internals';
 import {
@@ -80,22 +81,24 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 // 初始化时dispatch
 const HooksDispatcherOnMount: Dispatcher = {
 	useState: mountState,
-	useEffect: mountEffect
+	useEffect: mountEffect,
+	useTransition: mountTransition
 };
 // 更新时dispatch
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
-	useEffect: updateEffect
+	useEffect: updateEffect,
+	useTransition: updateTransition
 };
 
 function mountState<State>(
-	initialState: () => State | State
+	initialState: (() => State) | State
 ): [State, Dispatch<State>] {
 	// 找到当前useState对应的hook数据
 	const hook = mountWorkInProgressHook();
 
 	let memorizedState;
-	if (typeof initialState === 'function') {
+	if (initialState instanceof Function) {
 		memorizedState = initialState();
 	} else {
 		memorizedState = initialState;
@@ -104,6 +107,7 @@ function mountState<State>(
 	const queue = createUpdateQueue<State>();
 	hook.updateQueue = queue;
 	hook.memorizedState = memorizedState;
+	hook.baseState = memorizedState;
 
 	// bind 让该方法可以在函数组件外部正常调用
 	const dispatch = (queue.dispatch = dispatchSetState.bind(
@@ -152,7 +156,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 			memorizedState,
 			baseQueue: newBaseQueue,
 			baseState: newBaseState
-		} = processUpdateQueue(baseState, pending, renderLane);
+		} = processUpdateQueue(baseState, baseQueue, renderLane);
 		hook.memorizedState = memorizedState;
 		hook.baseState = newBaseState;
 		hook.baseQueue = newBaseQueue;
@@ -200,6 +204,33 @@ function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
 			nextDeps
 		);
 	}
+}
+
+function mountTransition(): [boolean, (callback: () => void) => void] {
+	const [isPending, setPending] = mountState(false);
+	const hook = mountWorkInProgressHook();
+	const start = startTransition.bind(null, setPending);
+
+	hook.memorizedState = start;
+	return [isPending, start];
+}
+
+function updateTransition(): [boolean, (callback: () => void) => void] {
+	const [isPending] = updateState();
+	const hook = updateWorkInProgressHook();
+	const start = hook.memorizedState as (callback: () => void) => void;
+	return [isPending as boolean, start];
+}
+
+function startTransition(setPending: Dispatch<boolean>, callback: () => void) {
+	setPending(true);
+	const preTransition = currentBatchConfig.transition;
+	currentBatchConfig.transition = 1;
+
+	callback();
+	setPending(false);
+
+	currentBatchConfig.transition = preTransition;
 }
 
 function pushEffect(
@@ -301,8 +332,8 @@ function updateWorkInProgressHook(): Hook {
 		memorizedState: currentHook.memorizedState,
 		updateQueue: currentHook.updateQueue,
 		next: null,
-		baseState: null,
-		baseQueue: null
+		baseState: currentHook.baseState,
+		baseQueue: currentHook.baseQueue
 	};
 
 	if (workInProgressHook === null) {

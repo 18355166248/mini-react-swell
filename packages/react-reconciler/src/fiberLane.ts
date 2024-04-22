@@ -6,16 +6,18 @@ import {
 	unstable_getCurrentPriorityLevel
 } from 'scheduler';
 import { FiberRootNode } from './fiber';
+import ReactCurrentBatchConfig from 'react/src/currentBatchConfig';
 
 export type Lane = number;
 export type Lanes = number;
 
-export const SyncLane = 0b0001;
-export const NoLane = 0b0000;
-export const NoLanes = 0b0000;
-export const InputContinuesLane = 0b0010;
-export const DefaultLane = 0b0100;
-export const IdleLane = 0b1000;
+export const NoLane = 0b00000;
+export const NoLanes = 0b00000;
+export const SyncLane = 0b00001;
+export const InputContinuesLane = 0b00010;
+export const DefaultLane = 0b00100;
+export const TransitionLane = 0b01000;
+export const IdleLane = 0b10000;
 
 export function mergeLanes(laneA: Lane, laneB: Lane): Lanes {
 	return laneA | laneB;
@@ -23,6 +25,10 @@ export function mergeLanes(laneA: Lane, laneB: Lane): Lanes {
 
 // 这里获取的优先级是基于事件(react-dom/src/SynthesisEvent.ts)生成的值
 export function requestUpdateLanes() {
+	const isTransition = ReactCurrentBatchConfig.transition !== null;
+	if (isTransition) {
+		return TransitionLane;
+	}
 	// 从上下文环境中获取 scheduler 优先级
 	const currentPriorityLevel = unstable_getCurrentPriorityLevel();
 	const lane = schedulePriorityToLane(currentPriorityLevel);
