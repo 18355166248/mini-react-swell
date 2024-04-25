@@ -13,6 +13,7 @@ import {
 import { mountChildFibers, reconcilerChildFibers } from './childFibers';
 import { renderWithHooks } from './fiberHooks';
 import { Lane } from './fiberLane';
+import { Ref } from './fiberFlags';
 
 // beginWork 就是递归的递阶段
 export const beginWork = (
@@ -55,6 +56,7 @@ function updateHostRoot(wip: FiberNode, renderLane: Lane) {
 function updateHostComponent(wip: FiberNode) {
 	const nextProps = wip.pendingProps;
 	const nextChildren = nextProps.children;
+	markRef(wip.alternate, wip);
 	reconcilerChildren(wip, nextChildren);
 	return wip.child;
 }
@@ -80,5 +82,17 @@ function reconcilerChildren(wip: FiberNode, children?: ReactElementType) {
 	} else {
 		// mount
 		wip.child = mountChildFibers(wip, null, children);
+	}
+}
+
+function markRef(current: FiberNode | null, workInProcess: FiberNode) {
+	const ref = workInProcess.ref;
+	// mount时存在ref
+	// update时 ref引用变化
+	if (
+		(current === null && ref !== null) ||
+		(current !== null && current.ref !== ref)
+	) {
+		workInProcess.flags |= Ref;
 	}
 }

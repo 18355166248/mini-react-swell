@@ -12,6 +12,7 @@
 		"demo-noop": "vite serve demo/test-noop-renderer --config scripts/vite/vite.noop.renderer.config.js --force",
 		"demo-scheduler": "vite serve demo/test-scheduler --config scripts/vite/vite.config.js --force",
 		"demo-transition": "vite serve demo/transition --config scripts/vite/vite.config.js --force",
+		"demo-ref": "vite serve demo/ref --config scripts/vite/vite.config.js --force",
 		"test": "jest --config scripts/jest/jest.config.js"
 	},
 	"keywords": [],
